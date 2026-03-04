@@ -1,41 +1,31 @@
-import './App.css'
+import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { AuthProvider } from "./context/AuthContext"
+import LoginPage from "./pages/LoginPage"
+import ChatPage from "./pages/ChatPage"
+import ProtectedRoute from "./components/auth/ProtectedRoute"
 
 function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center 
-                    bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600 
-                    bg-[length:200%_200%] animate-gradient">
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
 
-      <div className="relative bg-white/10 backdrop-blur-xl 
-                      border border-white/20 
-                      px-16 py-14 rounded-3xl 
-                      shadow-[0_0_60px_rgba(255,255,255,0.3)] 
-                      text-center transition-all duration-500 
-                      hover:scale-105">
+          <Route path="/login" element={<LoginPage />} />
 
-        <h1 className="text-6xl font-extrabold 
-                       bg-gradient-to-r from-yellow-300 via-pink-400 to-cyan-300 
-                       bg-clip-text text-transparent 
-                       drop-shadow-2xl">
-          🚀 Tailwind โหมดเทพ!
-        </h1>
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <p className="mt-6 text-xl text-white/90">
-          ตอนนี้เว็บของจิรายุระดับ Production แล้ว 🔥
-        </p>
+          <Route path="*" element={<LoginPage />} />
 
-        <button className="mt-10 px-10 py-4 
-                           bg-gradient-to-r from-yellow-400 to-orange-500 
-                           text-white font-bold rounded-full 
-                           shadow-lg hover:shadow-yellow-300/50 
-                           hover:scale-110 
-                           transition-all duration-300">
-          ลองกดดู 😎
-        </button>
-
-      </div>
-
-    </div>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }
 
