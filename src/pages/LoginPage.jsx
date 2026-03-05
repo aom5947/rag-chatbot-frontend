@@ -4,66 +4,74 @@ import { useNavigate } from "react-router-dom"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const { login } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!email) return
+    if (!email || !password) return
     login(email)
     navigate("/chat")
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50 relative">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-indigo-100">
 
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
+      <div className="w-[420px] bg-white/80 backdrop-blur-md border border-indigo-100 rounded-xl shadow-2xl p-10 transition-all duration-300 hover:shadow-indigo-200">
 
-      {/* Modal */}
-      <div className="relative bg-white w-[420px] rounded-2xl shadow-xl border border-neutral-200 p-8">
-
-        <h2 className="text-2xl font-semibold text-center text-neutral-900 mb-2">
-          ลงชื่อเข้าใช้หรือสร้างบัญชี
-        </h2>
-
-        <p className="text-sm text-neutral-500 text-center mb-6">
-          คุณจะได้รับคำตอบที่ฉลาดขึ้นและสามารถอัปโหลดไฟล์ได้
-        </p>
-
-        {/* Social Buttons */}
-        <button className="w-full mb-3 py-3 rounded-xl border border-neutral-200 bg-white hover:bg-neutral-100 transition">
-          ดำเนินการต่อด้วย Google
-        </button>
-
-        <button className="w-full mb-3 py-3 rounded-xl border border-neutral-200 bg-white hover:bg-neutral-100 transition">
-          ดำเนินการต่อด้วย Apple
-        </button>
-
-        {/* Divider */}
-        <div className="flex items-center my-6">
-          <div className="flex-1 h-px bg-neutral-200"></div>
-          <span className="px-3 text-sm text-neutral-400">หรือ</span>
-          <div className="flex-1 h-px bg-neutral-200"></div>
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="text-4xl mb-3">⚖️</div>
+          <h1 className="text-2xl font-semibold text-indigo-700">
+            Legal AI Assistant
+          </h1>
+          <p className="text-sm text-neutral-500 mt-2">
+            ระบบผู้ช่วยตอบคำถามด้านกฎหมายอัจฉริยะ
+          </p>
         </div>
 
-        {/* Email Form */}
         <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="ที่อยู่อีเมล"
-            className="w-full mb-4 px-4 py-3 rounded-xl bg-neutral-100 border border-neutral-200 outline-none focus:ring-2 focus:ring-neutral-300"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <div className="mb-4">
+            <label className="block text-sm text-neutral-600 mb-1">
+              อีเมล
+            </label>
+            <input
+              type="email"
+              className="w-full px-4 py-3 rounded-lg border border-neutral-200 bg-neutral-50 focus:ring-2 focus:ring-indigo-400 outline-none transition"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm text-neutral-600 mb-1">
+              รหัสผ่าน
+            </label>
+            <input
+              type="password"
+              className="w-full px-4 py-3 rounded-lg border border-neutral-200 bg-neutral-50 focus:ring-2 focus:ring-indigo-400 outline-none transition"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
 
           <button
             type="submit"
-            className="w-full bg-neutral-900 text-white py-3 rounded-xl hover:opacity-90 transition"
+            className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 transition transform hover:scale-[1.02]"
           >
-            ดำเนินการต่อ
+            เข้าสู่ระบบ
           </button>
         </form>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => navigate("/register")}
+            className="text-sm text-indigo-600 hover:text-indigo-800 transition"
+          >
+            สมัครสมาชิก
+          </button>
+        </div>
 
       </div>
     </div>
