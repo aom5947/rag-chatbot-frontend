@@ -10,7 +10,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-
+          
           <Route path="/login" element={<LoginPage />} />
 
           <Route
