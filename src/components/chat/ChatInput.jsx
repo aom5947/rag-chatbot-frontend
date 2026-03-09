@@ -1,31 +1,37 @@
 import { useState } from "react"
 
 export default function ChatInput({ onSend }) {
-  const [message, setMessage] = useState("")
 
-  const handleSend = () => {
-    if (!message.trim()) return
-    onSend(message)
-    setMessage("")
+  const [text, setText] = useState("")
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+    if (!text.trim()) return
+
+    onSend(text)   // 🔥 ส่งข้อความไป ChatPage
+    setText("")
   }
 
   return (
-    <div className="border-t border-indigo-100 bg-white/80 backdrop-blur-md p-4 flex gap-3">
+    <form
+      onSubmit={handleSubmit}
+      className="border-t p-4 flex gap-2"
+    >
       <input
-        type="text"
-        placeholder="พิมพ์คำถามด้านกฎหมาย..."
-        className="flex-1 px-4 py-3 rounded-lg border border-neutral-200 focus:ring-2 focus:ring-indigo-400 outline-none"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && handleSend()}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        className="flex-1 border rounded px-3 py-2"
+        placeholder="พิมพ์ข้อความ..."
       />
 
       <button
-        onClick={handleSend}
-        className="bg-indigo-600 text-white px-5 rounded-lg hover:bg-indigo-700 transition"
+        type="submit"
+        className="bg-indigo-600 text-white px-4 rounded"
       >
-        ส่ง
+        Send
       </button>
-    </div>
+
+    </form>
   )
 }
