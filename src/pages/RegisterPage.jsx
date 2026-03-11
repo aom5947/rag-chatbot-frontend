@@ -35,23 +35,40 @@ export default function RegisterPage() {
       return
     }
 
-    localStorage.setItem("registeredUser", JSON.stringify(form))
+    const existing = JSON.parse(localStorage.getItem("registeredUsers") || "[]")
+
+    if (existing.some(u => u.email === form.email)) {
+      alert("อีเมลนี้ถูกใช้งานแล้ว")
+      return
+    }
+
+    const newUsers = [...existing, form]
+    localStorage.setItem("registeredUsers", JSON.stringify(newUsers))
+
+    // บันทึก profile
+    const profile = {
+      name: `${form.firstName} ${form.lastName}`,
+      username: form.email,
+      avatar: null
+    }
+    localStorage.setItem("profile", JSON.stringify(profile))
+
     login(form.email)
     navigate("/chat")
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
 
-      <div className="w-[460px] bg-white/80 backdrop-blur-md border border-indigo-100 rounded-xl shadow-2xl p-10 transition-all duration-300 hover:shadow-indigo-200">
+      <div className="w-[460px] bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-indigo-100 dark:border-gray-700 rounded-xl shadow-2xl p-10 transition-all duration-300 hover:shadow-indigo-200 dark:hover:shadow-gray-700">
 
         {/* Header */}
         <div className="text-center mb-8">
           <div className="text-4xl mb-3">⚖️</div>
-          <h1 className="text-2xl font-semibold text-indigo-700">
+          <h1 className="text-2xl font-semibold text-indigo-700 dark:text-indigo-300">
             สร้างบัญชีผู้ใช้งาน
           </h1>
-          <p className="text-sm text-neutral-500 mt-2">
+          <p className="text-sm text-neutral-500 dark:text-gray-400 mt-2">
             ลงทะเบียนเพื่อใช้งานระบบ Legal AI Assistant
           </p>
         </div>
@@ -63,14 +80,14 @@ export default function RegisterPage() {
               type="text"
               name="firstName"
               placeholder="ชื่อ"
-              className="w-1/2 px-4 py-3 rounded-lg border border-neutral-200 bg-neutral-50 focus:ring-2 focus:ring-indigo-400 outline-none transition"
+              className="w-1/2 px-4 py-3 rounded-lg border border-neutral-200 dark:border-gray-600 bg-neutral-50 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-400 outline-none transition"
               onChange={handleChange}
             />
             <input
               type="text"
               name="lastName"
               placeholder="นามสกุล"
-              className="w-1/2 px-4 py-3 rounded-lg border border-neutral-200 bg-neutral-50 focus:ring-2 focus:ring-indigo-400 outline-none transition"
+              className="w-1/2 px-4 py-3 rounded-lg border border-neutral-200 dark:border-gray-600 bg-neutral-50 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-400 outline-none transition"
               onChange={handleChange}
             />
           </div>
@@ -78,7 +95,7 @@ export default function RegisterPage() {
           <input
             type="date"
             name="birthDate"
-            className="w-full px-4 py-3 rounded-lg border border-neutral-200 bg-neutral-50 focus:ring-2 focus:ring-indigo-400 outline-none transition"
+            className="w-full px-4 py-3 rounded-lg border border-neutral-200 dark:border-gray-600 bg-neutral-50 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-400 outline-none transition"
             onChange={handleChange}
           />
 
@@ -86,7 +103,7 @@ export default function RegisterPage() {
             type="email"
             name="email"
             placeholder="ที่อยู่อีเมล"
-            className="w-full px-4 py-3 rounded-lg border border-neutral-200 bg-neutral-50 focus:ring-2 focus:ring-indigo-400 outline-none transition"
+            className="w-full px-4 py-3 rounded-lg border border-neutral-200 dark:border-gray-600 bg-neutral-50 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-400 outline-none transition"
             onChange={handleChange}
           />
 
@@ -94,7 +111,7 @@ export default function RegisterPage() {
             type="password"
             name="password"
             placeholder="รหัสผ่าน"
-            className="w-full px-4 py-3 rounded-lg border border-neutral-200 bg-neutral-50 focus:ring-2 focus:ring-indigo-400 outline-none transition"
+            className="w-full px-4 py-3 rounded-lg border border-neutral-200 dark:border-gray-600 bg-neutral-50 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-400 outline-none transition"
             onChange={handleChange}
           />
 
@@ -110,7 +127,7 @@ export default function RegisterPage() {
         <div className="mt-6 text-center">
           <button
             onClick={() => navigate("/login")}
-            className="text-sm text-indigo-600 hover:text-indigo-800 transition"
+            className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition"
           >
             มีบัญชีอยู่แล้ว? เข้าสู่ระบบ
           </button>

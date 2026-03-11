@@ -46,6 +46,9 @@ export default function EditProfileModal({ open, onClose }) {
 
     localStorage.setItem("profile",JSON.stringify(profile))
 
+    // Trigger update in other components
+    window.dispatchEvent(new Event('profileUpdated'))
+
     onClose()
 
   }

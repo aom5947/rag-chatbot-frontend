@@ -9,29 +9,56 @@ export default function ChatInput({ onSend }) {
 
     if (!text.trim()) return
 
-    onSend(text)   // 🔥 ส่งข้อความไป ChatPage
+    onSend(text)
     setText("")
   }
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t p-4 flex gap-2"
+      className="border-t bg-white dark:bg-gray-900 p-4"
     >
-      <input
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        className="flex-1 border rounded px-3 py-2"
-        placeholder="พิมพ์ข้อความ..."
-      />
+      <div className="flex items-center gap-3 max-w-4xl mx-auto">
 
-      <button
-        type="submit"
-        className="bg-indigo-600 text-white px-4 rounded"
-      >
-        Send
-      </button>
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="พิมพ์ข้อความ..."
+          className="
+            flex-1
+            border
+            border-gray-300
+            dark:border-gray-700
+            bg-gray-50
+            dark:bg-gray-800
+            rounded-full
+            px-4
+            py-2
+            outline-none
+            focus:ring-2
+            focus:ring-indigo-500
+            transition
+          "
+        />
 
+        <button
+          type="submit"
+          className="
+            bg-indigo-600
+            hover:bg-indigo-700
+            text-white
+            px-5
+            py-2
+            rounded-full
+            font-medium
+            transition
+            shadow-sm
+          "
+        >
+          Send
+        </button>
+
+      </div>
     </form>
   )
 }

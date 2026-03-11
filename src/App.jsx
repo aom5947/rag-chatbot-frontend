@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { useState } from "react"
 import { AuthProvider } from "./context/AuthContext"
+import { DarkModeProvider } from "./context/DarkModeContext"
 import LoginPage from "./pages/LoginPage"
 import ChatPage from "./pages/ChatPage"
 import ProtectedRoute from "./components/auth/ProtectedRoute"
@@ -12,35 +13,38 @@ function App() {
   const [openProfileModal, setOpenProfileModal] = useState(false)
 
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <DarkModeProvider>
+      <AuthProvider>
+        <BrowserRouter>
 
-        <Routes>
-          
-          <Route path="/login" element={<LoginPage />} />
+          <Routes>
+            
+            <Route path="/" element={<ChatPage setOpenProfileModal={setOpenProfileModal} />} />
 
-          <Route
-            path="/chat"
-            element={
-              <ProtectedRoute>
-                <ChatPage setOpenProfileModal={setOpenProfileModal}/>
-              </ProtectedRoute>
-            }
+            <Route path="/login" element={<LoginPage />} />
+
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <ChatPage setOpenProfileModal={setOpenProfileModal} />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="*" element={<ChatPage setOpenProfileModal={setOpenProfileModal} />} />
+
+          </Routes>
+
+          <EditProfileModal
+            open={openProfileModal}
+            onClose={() => setOpenProfileModal(false)}
           />
 
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="*" element={<LoginPage />} />
-
-        </Routes>
-
-        {/* Modal อยู่ตรงนี้ */}
-        <EditProfileModal
-          open={openProfileModal}
-          onClose={() => setOpenProfileModal(false)}
-        />
-
-      </BrowserRouter>
-    </AuthProvider>
+        </BrowserRouter>
+      </AuthProvider>
+    </DarkModeProvider>
   )
 }
 
