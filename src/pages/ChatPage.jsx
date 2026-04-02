@@ -4,6 +4,7 @@ import Message from "../components/chat/Message"
 import ChatInput from "../components/chat/ChatInput"
 import EditProfileModal from "../components/EditProfileModal"
 import { useAuth } from "../context/AuthContext"
+import { streamChatMessage } from "../services/api"
 
 export default function ChatPage() {
 
@@ -72,7 +73,7 @@ export default function ChatPage() {
 
 
   // ส่งข้อความ
-  const handleSend = (text) => {
+  const handleSend = async (text) => {
 
     if (!user) {
       setOpenLoginModal(true)
@@ -86,6 +87,7 @@ export default function ChatPage() {
       content: text
     }
 
+    // เพิ่มข้อความของผู้ใช้
     setChats(prev =>
       prev.map(chat =>
         chat.id === activeChat
@@ -98,25 +100,72 @@ export default function ChatPage() {
       )
     )
 
-    setTimeout(() => {
+    // สร้าง bot message placeholder
+    const botMsg = {
+      role: "assistant",
+      content: ""
+    }
 
-      const botMsg = {
-        role: "assistant",
-        content: "กำลังค้นหากฎหมาย..."
-      }
+    setChats(prev =>
+      prev.map(chat =>
+        chat.id === activeChat
+          ? {
+              ...chat,
+              messages: [...chat.messages, botMsg]
+            }
+          : chat
+      )
+    )
 
+    try {
+      // ส่งคำถามไปยัง backend แบบ streaming
+      await streamChatMessage(
+        text,
+        String(activeChat),
+        // onToken: เมื่อได้ token ใหม่
+        (token) => {
+          setChats(prev =>
+            prev.map(chat =>
+              chat.id === activeChat
+                ? {
+                    ...chat,
+                    messages: chat.messages.map((msg, i) =>
+                      i === chat.messages.length - 1
+                        ? { ...msg, content: msg.content + token }
+                        : msg
+                    )
+                  }
+                : chat
+            )
+          )
+        },
+        // onDone: เมื่อจบการ streaming
+        (metadata) => {
+          // metadata มี: { intent, emotion, sections }
+          console.log("Chat completed:", metadata)
+        }
+      )
+    } catch (error) {
+      // แสดง error message
       setChats(prev =>
         prev.map(chat =>
           chat.id === activeChat
             ? {
                 ...chat,
-                messages: [...chat.messages, botMsg]
+                messages: chat.messages.map((msg, i) =>
+                  i === chat.messages.length - 1
+                    ? { 
+                        ...msg, 
+                        content: `❌ เกิดข้อผิดพลาด: ${error.message}` 
+                      }
+                    : msg
+                )
               }
             : chat
         )
       )
-
-    }, 800)
+      console.error("Chat error:", error)
+    }
 
   }
 
