@@ -56,29 +56,26 @@ export async function streamChatMessage(
   message,
   sessionId,
   onToken,
-  onDone
+  onDone,
+  model = "openai-compat"
 ) {
   const res = await fetch(`${API_BASE}/chat/stream`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(API_KEY && { "X-API-Key": API_KEY }), // ✅ ใช้ key จาก env
+      ...(API_KEY && { "X-API-Key": API_KEY }),
     },
     body: JSON.stringify({
-      message: String(message),       // ✅ ถูกแล้ว
-      session_id: String(sessionId),  // ✅ ถูกแล้ว
-      model: "openai-compat"                    // ❗ สำคัญมาก (อย่าใช้ default)
+      message: String(message),
+      session_id: String(sessionId),
+      model: model
     })
   });
 
   if (!res.ok) {
-    const text = await res.text(); // 👈 debug error
+    const text = await res.text();
     console.error("Backend error:", text);
-    throw new Error(`Request failed: ${res.status}`);
-  }
-
-  if (!res.ok) {
-    throw new Error("Request failed");
+    throw new Error(`Request failed: ${res.status} - ${text}`);
   }
 
   const reader = res.body.getReader();
@@ -92,14 +89,13 @@ export async function streamChatMessage(
 
     buffer += decoder.decode(value, { stream: true });
 
-    // 🔥 split SSE event (คั่นด้วย \n\n)
     const events = buffer.split("\n\n");
-    buffer = events.pop(); // เก็บ incomplete ไว้รอบหน้า
+    buffer = events.pop();
 
     for (let event of events) {
-      // แยก line
-      const lines = event.split("\n");
+      if (!event.trim()) continue;
 
+      const lines = event.split("\n");
       let eventType = "message";
       let dataLine = "";
 
@@ -117,31 +113,31 @@ export async function streamChatMessage(
       try {
         const parsed = JSON.parse(dataLine);
 
-        // 🔥 token streaming
-        if (eventType === "message") {
-          onToken?.(parsed);
+        // ✅ TOKEN (string)
+        if (typeof parsed === "string") {
+          console.debug("📝 Chunk:", parsed);
+
+          // 🔥 Fake streaming ทีละคำ
+          const words = parsed.split(" ");
+
+          for (let i = 0; i < words.length; i++) {
+            const word = words[i];
+
+            onToken?.(word + (i < words.length - 1 ? " " : ""));
+
+            await new Promise(r => setTimeout(r, 20));
+          }
         }
 
-        // 🔥 done event
+        // ✅ DONE EVENT
         if (eventType === "done") {
+          console.debug("🎯 Done:", parsed);
           onDone?.(parsed);
         }
+
       } catch (e) {
-        // ignore parse error
+        console.warn("Parse error:", e, dataLine);
       }
     }
-  }
-}
-
-/**
- * ตรวจสอบสถานะ backend
- */
-export async function checkHealth() {
-  try {
-    const response = await fetch(`${API_BASE}/health`)
-    return await response.json()
-  } catch (error) {
-    console.error("Health check failed:", error)
-    return { status: "error", message: error.message }
   }
 }
