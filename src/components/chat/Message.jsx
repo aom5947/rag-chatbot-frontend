@@ -1,59 +1,98 @@
+import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import rehypeRaw from "rehype-raw"
 
 export default function Message({ role, content }) {
 
   const isUser = role === "user"
+  const [displayed, setDisplayed] = useState("")
 
-  const markdownComponents = {
-    p: (props) => (
-      <p className="mb-3 leading-7" {...props} />
+  useEffect(() => {
+    if (isUser) {
+      setDisplayed(content)
+      return
+    }
+
+    let i = 0
+    const interval = setInterval(() => {
+      setDisplayed(content.slice(0, i))
+      i++
+      if (i > content.length) clearInterval(interval)
+    }, 10)
+
+    return () => clearInterval(interval)
+  }, [content])
+
+  if (!content) {
+    return (
+      <div className="flex justify-start">
+        <div className="bg-white px-3 py-2 rounded-xl shadow-sm border">
+          <div className="flex gap-1 text-base">
+            <span className="animate-bounce">.</span>
+            <span className="animate-bounce delay-100">.</span>
+            <span className="animate-bounce delay-200">.</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const components = {
+    p: ({ children }) => (
+      <p className="mb-1.5 leading-6">{children}</p>
     ),
-    strong: (props) => (
-      <strong className={`font-bold ${isUser ? "text-white" : "text-gray-900"}`} {...props} />
+    strong: ({ children }) => (
+      <strong className="font-semibold">{children}</strong>
     ),
-    em: (props) => (
-      <em className={`italic ${isUser ? "text-white" : "text-gray-700"}`} {...props} />
+    h1: ({ children }) => (
+      <h1 className="text-base font-bold mb-1">{children}</h1>
     ),
-    h1: (props) => (
-      <h1 className="text-lg font-semibold mb-2" {...props} />
+    h2: ({ children }) => (
+      <h2 className="text-sm font-semibold mb-1">{children}</h2>
     ),
-    h2: (props) => (
-      <h2 className="text-base font-semibold mb-2" {...props} />
+    ul: ({ children }) => (
+      <ul className="list-disc pl-4 mb-1.5 space-y-0.5">{children}</ul>
     ),
-    ul: (props) => (
-      <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />
+    ol: ({ children }) => (
+      <ol className="list-decimal pl-4 mb-1.5 space-y-0.5">{children}</ol>
     ),
-    blockquote: (props) => (
-      <blockquote className={`border-l-4 pl-4 italic my-3 ${isUser ? "border-white text-white" : "border-gray-300 text-gray-500"}`}>
-        {props.children}
+    li: ({ children }) => (
+      <li className="leading-6">{children}</li>
+    ),
+    blockquote: ({ children }) => (
+      <blockquote className="border-l-2 border-gray-300 pl-3 italic text-gray-500 my-1.5">
+        {children}
       </blockquote>
     ),
-    code: (props) => (
-      <code className={`px-1 py-0.5 rounded text-xs ${isUser ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-800"}`} {...props} />
+    code: ({ children }) => (
+      <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">
+        {children}
+      </code>
     ),
   }
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
 
-      <div
-        className={`max-w-xl px-4 py-3 rounded-2xl text-sm leading-relaxed
-        ${isUser 
-          ? "bg-indigo-500 text-white" 
-          : "bg-white text-gray-800 border border-gray-200"}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`
+          max-w-2xl px-4 py-2.5 rounded-xl text-sm shadow-sm
+          whitespace-pre-wrap break-words
+          ${isUser
+            ? "bg-blue-500 text-white"
+            : "bg-white border border-gray-200 text-gray-800"}
         `}
       >
         <ReactMarkdown
-          components={markdownComponents}
+          components={components}
           remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeRaw]}
-          skipHtml={false}
         >
-          {content}
+          {displayed}
         </ReactMarkdown>
-      </div>
+      </motion.div>
 
     </div>
   )

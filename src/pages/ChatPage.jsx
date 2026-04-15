@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+
 import Sidebar from "../components/layout/Sidebar"
 import ChatInput from "../components/chat/ChatInput"
 import Message from "../components/chat/Message"
 import EditProfileModal from "../components/EditProfileModal"
+
 import { useAuth } from "../context/AuthContext"
 import { streamChatMessage } from "../services/api"
 
@@ -13,14 +16,11 @@ export default function ChatPage() {
   const [activeChat, setActiveChat] = useState(null)
   const [openProfileModal, setOpenProfileModal] = useState(false)
 
-  const { user, login } = useAuth()
-  const [openLoginModal, setOpenLoginModal] = useState(!user)
-  const [loginEmail, setLoginEmail] = useState("")
-  const [loginPassword, setLoginPassword] = useState("")
+  const { user } = useAuth()
 
-  const displayUser = typeof user === "object" ? user?.email : user
   const bottomRef = useRef(null)
 
+  // โหลด chat
   useEffect(() => {
     const saved = localStorage.getItem("chats")
     if (saved) {
@@ -39,11 +39,10 @@ export default function ChatPage() {
   }, [chats])
 
   useEffect(() => {
-    setOpenLoginModal(!user)
-  }, [user])
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end"
+    })
   }, [chats])
 
   const createChat = () => {
@@ -53,11 +52,6 @@ export default function ChatPage() {
   }
 
   const handleSend = async (text) => {
-    if (!user) {
-      setOpenLoginModal(true)
-      return
-    }
-
     if (!activeChat) return
 
     const userMsg = { role: "user", content: text }
@@ -127,136 +121,102 @@ export default function ChatPage() {
   const currentChat = chats.find(c => c.id === activeChat) || { messages: [] }
 
   return (
-    <div className="h-screen flex bg-white text-gray-900">
+    <div className="h-screen flex bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900">
 
-      {/* animation styles */}
-      <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in-up { animation: fadeInUp 0.25s ease-out; }
-      `}</style>
-
-      <Sidebar
-        isOpen={isOpen}
-        setIsOpen={setIsOpen}
-        chats={chats}
-        setActiveChat={setActiveChat}
-        createChat={createChat}
-        setOpenProfileModal={setOpenProfileModal}
-        user={user}
-        setOpenLoginModal={setOpenLoginModal}
-      />
+      {/* Sidebar Animation */}
+      <motion.div
+        initial={{ x: -250 }}
+        animate={{ x: isOpen ? 0 : -250 }}
+        transition={{ duration: 0.3 }}
+        className="h-full"
+      >
+        <Sidebar
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          chats={chats}
+          setActiveChat={setActiveChat}
+          createChat={createChat}
+          setOpenProfileModal={setOpenProfileModal}
+          user={user}
+        />
+      </motion.div>
 
       <div className="flex-1 flex flex-col w-full">
 
         {/* Navbar */}
-        <div className="h-14 flex items-center justify-between px-4 border-b border-gray-200">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="h-14 flex items-center justify-between px-4 border-b border-gray-200 backdrop-blur bg-white/70"
+        >
           <div className="font-medium">Legal Assistant</div>
-          {user && <div className="text-sm text-gray-400">{displayUser}</div>}
-        </div>
+          {user && (
+            <div className="text-sm text-gray-500">
+              {user?.name}
+            </div>
+          )}
+        </motion.div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
 
           {currentChat.messages.length === 0 && (
-            <div className="text-center mt-24 text-gray-400">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center mt-24 text-gray-400"
+            >
               เริ่มต้นพิมพ์คำถามของคุณ
-            </div>
+            </motion.div>
           )}
 
-          {currentChat.messages.map((msg, i) => (
-            <div key={i} className="flex flex-col fade-in-up">
-              <div className={`text-xs mb-1 ${msg.role === "user" ? "text-right" : "text-left text-gray-400"}`}>
-                {msg.role === "user" ? "You" : "AI"}
-              </div>
-
-              {msg.content ? (
-                <Message role={msg.role} content={msg.content} />
-              ) : (
-                <div className="px-4 py-3 rounded-xl whitespace-pre-wrap transition-all duration-150 bg-white border border-gray-200">
-                  <span className="flex gap-1">
-                    <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></span>
-                    <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce [animation-delay:0.1s]"></span>
-                    <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                  </span>
+          <AnimatePresence>
+            {currentChat.messages.map((msg, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="flex flex-col"
+              >
+                <div
+                  className={`text-xs mb-1 ${
+                    msg.role === "user"
+                      ? "text-right"
+                      : "text-left text-gray-400"
+                  }`}
+                >
+                  {msg.role === "user" ? "You" : "AI"}
                 </div>
-              )}
-            </div>
-          ))}
+
+                <div
+                  className={`max-w-xl px-4 py-3 rounded-2xl shadow-sm ${
+                    msg.role === "user"
+                      ? "bg-blue-500 text-white ml-auto"
+                      : "bg-white"
+                  }`}
+                >
+                  <Message role={msg.role} content={msg.content} />
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
 
           <div ref={bottomRef} />
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 bg-white/70 backdrop-blur">
           <ChatInput onSend={handleSend} />
         </div>
 
+        {/* Profile Modal */}
         {openProfileModal && (
           <EditProfileModal
             open={openProfileModal}
             onClose={() => setOpenProfileModal(false)}
           />
-        )}
-
-        {/* Login */}
-        {openLoginModal && (
-          <div className="fixed inset-0 bg-black/20 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-xl w-80 border fade-in-up">
-
-              <h2 className="text-lg mb-4">เข้าสู่ระบบ</h2>
-
-              <form onSubmit={(e) => {
-                e.preventDefault()
-                if (!loginEmail || !loginPassword) return
-
-                const users = JSON.parse(localStorage.getItem("registeredUsers") || "[]")
-                const user = users.find(u => u.email === loginEmail && u.password === loginPassword)
-
-                if (!user) {
-                  alert("อีเมลหรือรหัสผ่านไม่ถูกต้อง")
-                  return
-                }
-
-                login(loginEmail)
-
-                const profile = {
-                  name: `${user.firstName} ${user.lastName}`,
-                  username: user.email,
-                  avatar: null
-                }
-                localStorage.setItem("profile", JSON.stringify(profile))
-
-                setOpenLoginModal(false)
-                setLoginEmail("")
-                setLoginPassword("")
-              }}>
-
-                <input
-                  type="email"
-                  placeholder="อีเมล"
-                  className="w-full p-2 mb-2 border rounded focus:outline-none focus:ring-2 focus:ring-gray-300 transition"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                />
-
-                <input
-                  type="password"
-                  placeholder="รหัสผ่าน"
-                  className="w-full p-2 mb-4 border rounded focus:outline-none focus:ring-2 focus:ring-gray-300 transition"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                />
-
-                <button className="w-full border py-2 rounded hover:bg-gray-100 transition active:scale-95">
-                  เข้าสู่ระบบ
-                </button>
-              </form>
-
-            </div>
-          </div>
         )}
 
       </div>

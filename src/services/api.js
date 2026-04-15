@@ -57,7 +57,7 @@ export async function streamChatMessage(
   sessionId,
   onToken,
   onDone,
-  model = "openai-compat"
+  model = "gpt-oss:20b"
 ) {
   const res = await fetch(`${API_BASE}/chat/stream`, {
     method: "POST",

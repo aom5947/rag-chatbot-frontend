@@ -7,6 +7,7 @@ import ChatPage from "./pages/ChatPage"
 import ProtectedRoute from "./components/auth/ProtectedRoute"
 import RegisterPage from "./pages/RegisterPage"
 import EditProfileModal from "./components/EditProfileModal"
+import AuthCallback from "./pages/AuthCallback"
 
 function App() {
 
@@ -18,11 +19,24 @@ function App() {
         <BrowserRouter>
 
           <Routes>
-            
-            <Route path="/" element={<ChatPage setOpenProfileModal={setOpenProfileModal} />} />
 
+            {/* ✅ Google callback (สำคัญมาก) */}
+            <Route path="/auth/callback" element={<AuthCallback />} />
+
+            {/* ✅ หน้าแรกต้องกันไว้ */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <ChatPage setOpenProfileModal={setOpenProfileModal} />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ✅ login */}
             <Route path="/login" element={<LoginPage />} />
 
+            {/* ✅ chat */}
             <Route
               path="/chat"
               element={
@@ -32,11 +46,22 @@ function App() {
               }
             />
 
+            {/* ✅ register */}
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="*" element={<ChatPage setOpenProfileModal={setOpenProfileModal} />} />
+
+            {/* ✅ fallback route */}
+            <Route
+              path="*"
+              element={
+                <ProtectedRoute>
+                  <ChatPage setOpenProfileModal={setOpenProfileModal} />
+                </ProtectedRoute>
+              }
+            />
 
           </Routes>
 
+          {/* modal */}
           <EditProfileModal
             open={openProfileModal}
             onClose={() => setOpenProfileModal(false)}

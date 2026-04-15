@@ -12,7 +12,6 @@ export default function Sidebar({
   setActiveChat,
   createChat,
   setOpenProfileModal,
-  user,
   setOpenLoginModal
 }) {
 
@@ -22,45 +21,20 @@ export default function Sidebar({
 
   const [openProfile, setOpenProfile] = useState(false)
   const [openSettings, setOpenSettings] = useState(false)
-  const [profile, setProfile] = useState(() => {
-    try {
-      const saved = localStorage.getItem("profile");
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  })
 
   const { isDarkMode, toggleDarkMode } = useDarkMode()
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
 
   const scrollRef = useRef(null)
   const sentinelRef = useRef(null)
 
-  useEffect(() => {
-
-    const handleStorageChange = () => {
-      const updated = JSON.parse(localStorage.getItem("profile"))
-      if (updated) setProfile(updated)
-    }
-
-    window.addEventListener("storage", handleStorageChange)
-    window.addEventListener("profileUpdated", handleStorageChange)
-    return () => {
-      window.removeEventListener("storage", handleStorageChange)
-      window.removeEventListener("profileUpdated", handleStorageChange)
-    }
-
-  }, [])
-
+  // ✅ Load chat ทีละ batch
   const loadMore = useCallback(() => {
-
     if (loading || !hasMore) return
 
     setLoading(true)
 
     setTimeout(() => {
-
       setVisibleChats(prev => {
         const next = chats.slice(prev.length, prev.length + BATCH_SIZE)
         const newHasMore = prev.length + BATCH_SIZE < chats.length
@@ -69,28 +43,20 @@ export default function Sidebar({
       })
 
       setLoading(false)
-
-    }, 300)
+    }, 200)
 
   }, [chats, loading, hasMore])
 
   useEffect(() => {
     setVisibleChats([])
     setHasMore(true)
-    setLoading(false)
   }, [chats])
 
   useEffect(() => {
-    if (hasMore && !loading && visibleChats.length === 0) {
-      loadMore()
-    }
-  }, [chats, hasMore, loading, visibleChats.length, loadMore])
+    if (visibleChats.length === 0) loadMore()
+  }, [visibleChats, loadMore])
 
   useEffect(() => {
-
-    const sentinel = sentinelRef.current
-    if (!sentinel) return
-
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) loadMore()
@@ -98,11 +64,22 @@ export default function Sidebar({
       { root: scrollRef.current }
     )
 
-    observer.observe(sentinel)
+    if (sentinelRef.current) {
+      observer.observe(sentinelRef.current)
+    }
 
     return () => observer.disconnect()
-
   }, [loadMore])
+
+  // ✅ derive user data
+  const displayName =
+    user?.username ||
+    user?.email ||
+    "User"
+
+  const avatar =
+    user?.avatar_url ||
+    null
 
   return (
     <div
@@ -112,7 +89,6 @@ export default function Sidebar({
 
       {/* Header */}
       <div className="flex items-center justify-between h-14 px-4 bg-neutral-50 dark:bg-gray-800 border-b border-neutral-200 dark:border-gray-700">
-
         {isOpen && (
           <h2 className="font-semibold text-neutral-700 dark:text-gray-300">
             Legal AI
@@ -125,46 +101,43 @@ export default function Sidebar({
         >
           {isOpen ? <X size={18}/> : <Menu size={18}/>}
         </button>
-
       </div>
 
       {/* New Chat */}
       <div className="p-3">
-
         <button
-          onClick={() => { if (!user) setOpenLoginModal(true); else createChat(); }}
-          className="flex items-center gap-2 w-full border border-neutral-300 dark:border-gray-600 text-neutral-700 dark:text-gray-300 p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-gray-800"
+          onClick={() => {
+            if (!user) setOpenLoginModal(true)
+            else createChat()
+          }}
+          className="flex items-center gap-2 w-full border border-neutral-300 dark:border-gray-600 p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-gray-800"
         >
           <MessageSquarePlus size={18}/>
           {isOpen && "New Chat"}
         </button>
-
       </div>
 
       {/* History */}
       <div className="flex-1 flex flex-col min-h-0 px-3">
-
         {isOpen && (
-          <p className="text-xs uppercase text-neutral-400 dark:text-gray-500 tracking-widest mb-2">
+          <p className="text-xs uppercase text-neutral-400 dark:text-gray-500 mb-2">
             History
           </p>
         )}
 
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto space-y-1"
-        >
+        <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-1">
 
           {visibleChats.map(chat => (
-
             <button
               key={chat.id}
-              onClick={() => { if (!user) setOpenLoginModal(true); else setActiveChat(chat.id); }}
-              className="w-full text-left px-3 py-2 rounded-lg text-sm text-neutral-600 dark:text-gray-400 hover:bg-neutral-100 dark:hover:bg-gray-800 hover:text-neutral-900 dark:hover:text-gray-100 truncate"
+              onClick={() => {
+                if (!user) setOpenLoginModal(true)
+                else setActiveChat(chat.id)
+              }}
+              className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-neutral-100 dark:hover:bg-gray-800 truncate"
             >
               {isOpen ? chat.title : "💬"}
             </button>
-
           ))}
 
           <div ref={sentinelRef} />
@@ -175,7 +148,7 @@ export default function Sidebar({
                 {[0,1,2].map(i => (
                   <span
                     key={i}
-                    className="w-1.5 h-1.5 bg-neutral-400 dark:bg-gray-600 rounded-full animate-bounce"
+                    className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce"
                     style={{animationDelay:`${i*0.15}s`}}
                   />
                 ))}
@@ -183,22 +156,15 @@ export default function Sidebar({
             </div>
           )}
 
-          {!hasMore && (
-            <p className="text-xs text-center text-neutral-400 dark:text-gray-500 py-2">
-              End of chats
-            </p>
-          )}
-
         </div>
-
       </div>
 
       {/* Profile */}
       <div className="relative border-t border-neutral-200 dark:border-gray-700 p-3">
 
+        {/* dropdown */}
         {openProfile && (
-
-          <div className="absolute bottom-16 left-3 w-56 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden">
+          <div className="absolute bottom-16 left-3 w-56 bg-white dark:bg-gray-800 border rounded-xl shadow-lg overflow-hidden">
 
             <button
               onClick={() => {
@@ -220,25 +186,21 @@ export default function Sidebar({
             </button>
 
           </div>
-
         )}
 
+        {/* settings */}
         {openSettings && (
-
-          <div className="absolute bottom-32 left-3 w-56 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden">
+          <div className="absolute bottom-32 left-3 w-56 bg-white dark:bg-gray-800 border rounded-xl shadow-lg overflow-hidden">
 
             <button
               onClick={toggleDarkMode}
-              className="flex items-center gap-2 w-full p-3 text-sm hover:bg-neutral-100 dark:hover:bg-gray-700"
+              className="w-full p-3 text-sm hover:bg-neutral-100 dark:hover:bg-gray-700"
             >
               {isDarkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
             </button>
 
             <button
-              onClick={() => {
-                logout()
-                setOpenSettings(false)
-              }}
+              onClick={logout}
               className="flex items-center gap-2 w-full p-3 text-sm hover:bg-neutral-100 dark:hover:bg-gray-700"
             >
               <LogOut size={16}/>
@@ -246,47 +208,34 @@ export default function Sidebar({
             </button>
 
           </div>
-
         )}
 
+        {/* user info */}
         <div
-          onClick={() => { if (!user) setOpenLoginModal(true); else setOpenProfile(!openProfile); }}
+          onClick={() => {
+            if (!user) setOpenLoginModal(true)
+            else setOpenProfile(!openProfile)
+          }}
           className="flex items-center gap-3 cursor-pointer hover:bg-neutral-100 dark:hover:bg-gray-800 p-2 rounded"
         >
 
           <div className="w-8 h-8 rounded-full overflow-hidden">
-
-            {profile?.avatar ? (
-
-              <img
-                src={profile.avatar}
-                className="w-full h-full object-cover"
-              />
-
+            {avatar ? (
+              <img src={avatar} className="w-full h-full object-cover" />
             ) : (
-
-              <div className="w-full h-full bg-neutral-400 dark:bg-gray-600 flex items-center justify-center text-white text-sm font-bold">
-                {profile?.name?.charAt(0) || "U"}
+              <div className="w-full h-full bg-neutral-400 flex items-center justify-center text-white text-sm font-bold">
+                {displayName.charAt(0)}
               </div>
-
             )}
-
           </div>
 
           {isOpen && (
-
             <div className="text-sm">
-
-              <p className="font-medium">
-                {profile?.name || "User"}
+              <p className="font-medium">{displayName}</p>
+              <p className="text-xs text-neutral-400">
+                {user?.email || ""}
               </p>
-
-              <p className="text-xs text-neutral-400 dark:text-gray-500">
-                {profile?.username || "Profile"}
-              </p>
-
             </div>
-
           )}
 
         </div>

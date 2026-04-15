@@ -1,62 +1,72 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Send } from "lucide-react"
 
 export default function ChatInput({ onSend }) {
 
   const [text, setText] = useState("")
+  const textareaRef = useRef(null)
 
   const handleSubmit = (e) => {
     e.preventDefault()
-
     if (!text.trim()) return
 
     onSend(text)
     setText("")
+    textareaRef.current.style.height = "auto"
+  }
+
+  const handleInput = (e) => {
+    setText(e.target.value)
+    textareaRef.current.style.height = "auto"
+    textareaRef.current.style.height = textareaRef.current.scrollHeight + "px"
   }
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t bg-white dark:bg-gray-900 p-4"
+      className="border-t bg-white/70 backdrop-blur p-4"
     >
-      <div className="flex items-center gap-3 max-w-4xl mx-auto">
+      <div className="flex items-end gap-3 max-w-4xl mx-auto">
 
-        <input
+        {/* textarea */}
+        <textarea
+          ref={textareaRef}
+          rows={1}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={handleInput}
           placeholder="พิมพ์ข้อความ..."
           className="
             flex-1
-            border
-            border-gray-300
-            dark:border-gray-700
-            bg-gray-50
-            dark:bg-gray-800
-            rounded-full
-            px-4
-            py-2
+            resize-none
+            bg-gray-100
+            border border-gray-200
+            rounded-2xl
+            px-4 py-3
             outline-none
-            focus:ring-2
-            focus:ring-indigo-500
+            focus:ring-2 focus:ring-blue-500
             transition
+            max-h-40
+            overflow-y-auto
           "
         />
 
-        <button
+        {/* send button */}
+        <motion.button
+          whileTap={{ scale: 0.85 }}
+          whileHover={{ scale: 1.1 }}
           type="submit"
           className="
-            bg-indigo-600
-            hover:bg-indigo-700
+            bg-blue-500
+            hover:bg-blue-600
             text-white
-            px-5
-            py-2
+            p-3
             rounded-full
-            font-medium
-            transition
-            shadow-sm
+            shadow-md
           "
         >
-          Send
-        </button>
+          <Send size={18} />
+        </motion.button>
 
       </div>
     </form>
