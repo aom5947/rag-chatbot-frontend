@@ -9,6 +9,8 @@ import RegisterPage from "./pages/RegisterPage"
 import EditProfileModal from "./components/EditProfileModal"
 import AuthCallback from "./pages/AuthCallback"
 import HomePage from "./pages/HomePage"
+import AboutPage from "./pages/AboutPage"
+import HomepageLayout from "./components/layout/HomepageLayout"
 
 function App() {
   const [openProfileModal, setOpenProfileModal] = useState(false)
@@ -30,8 +32,10 @@ function App() {
                 </ProtectedRoute>
               }
             /> */}
-
-            <Route path="/" element={<HomePage />} />
+            <Route element={<HomepageLayout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/about" element={<AboutPage />} />
+            </Route>
 
             {/* ✅ login */}
             <Route path="/login" element={<LoginPage />} />

@@ -8,9 +8,7 @@ import { Navbar } from "../components/layout/Navbar";
 const HomePage = () => {
     return (
         <main className="min-h-screen bg-gray-50">
-            <Navbar />
-
-            {/* Hero Section */}
+            
             <section className="mx-auto max-w-[1024px] w-full px-4 py-20 text-center">
                 <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4 leading-tight">
                     AI ช่วยคุณ{" "}
@@ -34,7 +32,6 @@ const HomePage = () => {
                     Chatbot ตอบคำถามกฎหมายจราจรโดยใช้ RAG ค้นหา วิเคราะห์ และอธิบายกฎหมายได้ทันที
                 </p>
 
-                {/* CTA Buttons */}
                 <div className="flex justify-center gap-3 flex-wrap">
                     <Link
                         to="/chat"
@@ -51,7 +48,6 @@ const HomePage = () => {
                 </div>
             </section>
 
-            {/* Feature Cards */}
             <section className="mx-auto max-w-[1024px] w-full px-4 pb-16">
                 <div className="flex flex-col sm:flex-row gap-4">
                     {features.map((feature) => (
@@ -72,17 +68,6 @@ const HomePage = () => {
                 </div>
             </section>
 
-            {/* Footer / Disclaimer */}
-            <footer className="border-t border-gray-200 bg-white">
-                <div className="mx-auto max-w-[1024px] w-full px-4 py-6 text-center text-xs text-gray-400 leading-relaxed">
-                    <p>
-                        <strong className="text-gray-500">ข้อสงวนสิทธิ์ทางกฎหมาย:</strong>{" "}
-                        ข้อมูลที่ได้รับจากระบบนี้เป็นเพียงข้อมูลเบื้องต้นเพื่อการศึกษาเท่านั้น
-                        ไม่ถือเป็นคำปรึกษาทางกฎหมาย กรุณาปรึกษาทนายความหรือเจ้าหน้าที่ผู้มีอำนาจก่อนตัดสินใจ
-                    </p>
-                    <p className="mt-2">© {new Date().getFullYear()} TrafficLawAI · สงวนลิขสิทธิ์</p>
-                </div>
-            </footer>
         </main>
     );
 };
