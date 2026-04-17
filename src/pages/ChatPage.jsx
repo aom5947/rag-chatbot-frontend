@@ -7,51 +7,103 @@ import Message from "../components/chat/Message"
 import EditProfileModal from "../components/EditProfileModal"
 
 import { useAuth } from "../context/AuthContext"
-import { streamChatMessage } from "../services/api"
+import { streamChatMessage, fetchSessions, fetchSessionHistory, deleteSession } from "../services/api"
 
 export default function ChatPage() {
 
   const [isOpen, setIsOpen] = useState(true)
   const [chats, setChats] = useState([])
   const [activeChat, setActiveChat] = useState(null)
+  const [sessionLoading, setSessionLoading] = useState(true)
+  const [historyLoading, setHistoryLoading] = useState(false)
   const [openProfileModal, setOpenProfileModal] = useState(false)
 
   const { user } = useAuth()
-
   const bottomRef = useRef(null)
 
-  // โหลด chat
+  // Fetch session list on mount
   useEffect(() => {
-    const saved = localStorage.getItem("chats")
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      setChats(parsed)
-      setActiveChat(parsed[0]?.id)
-    } else {
-      const firstChat = { id: Date.now(), title: "New Chat", messages: [] }
-      setChats([firstChat])
-      setActiveChat(firstChat.id)
-    }
+    fetchSessions()
+      .then(({ items }) => {
+        if (items.length === 0) {
+          const newChat = { id: String(Date.now()), title: "New Chat", messages: [], loaded: true }
+          setChats([newChat])
+          setActiveChat(newChat.id)
+        } else {
+          const list = items.map(s => ({
+            id: s.id,
+            title: new Date(s.last_active).toLocaleDateString("th-TH", { dateStyle: "medium" }),
+            messages: [],
+            loaded: false,
+          }))
+          setChats(list)
+          setActiveChat(list[0].id)
+        }
+      })
+      .catch(() => {
+        const newChat = { id: String(Date.now()), title: "New Chat", messages: [], loaded: true }
+        setChats([newChat])
+        setActiveChat(newChat.id)
+      })
+      .finally(() => setSessionLoading(false))
   }, [])
 
+  // Lazy-load history when switching to an unloaded session
   useEffect(() => {
-    localStorage.setItem("chats", JSON.stringify(chats))
-  }, [chats])
+    if (!activeChat) return
+    const chat = chats.find(c => c.id === activeChat)
+    if (!chat || chat.loaded) return
+
+    setHistoryLoading(true)
+    fetchSessionHistory(activeChat)
+      .then(history => {
+        const messages = history.map(m => ({ role: m.role, content: m.content }))
+        const firstUserMsg = history.find(m => m.role === "user")?.content
+        setChats(prev => prev.map(c =>
+          c.id === activeChat
+            ? { ...c, messages, title: firstUserMsg?.slice(0, 30) || c.title, loaded: true }
+            : c
+        ))
+      })
+      .catch(() => {
+        setChats(prev => prev.map(c =>
+          c.id === activeChat ? { ...c, loaded: true } : c
+        ))
+      })
+      .finally(() => setHistoryLoading(false))
+  }, [activeChat])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end"
-    })
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
   }, [chats])
 
   const createChat = () => {
-    const newChat = { id: Date.now(), title: "New Chat", messages: [] }
+    const newChat = { id: String(Date.now()), title: "New Chat", messages: [], loaded: true }
     setChats(prev => [newChat, ...prev])
     setActiveChat(newChat.id)
   }
 
-  const handleSend = async (text) => {
+  const deleteChat = async (chatId) => {
+    try { await deleteSession(chatId) } catch (e) {
+      if (e?.response?.status !== 404) console.error("deleteSession failed:", e)
+    }
+    setChats(prev => {
+      const next = prev.filter(c => c.id !== chatId)
+      if (activeChat === chatId) {
+        if (next.length > 0) {
+          setActiveChat(next[0].id)
+        } else {
+          const newChat = { id: String(Date.now()), title: "New Chat", messages: [], loaded: true }
+          setChats([newChat])
+          setActiveChat(newChat.id)
+          return [newChat]
+        }
+      }
+      return next
+    })
+  }
+
+  const handleSend = async (text, model) => {
     if (!activeChat) return
 
     const userMsg = { role: "user", content: text }
@@ -98,7 +150,8 @@ export default function ChatPage() {
             )
           )
         },
-        () => {}
+        () => {},
+        model
       )
     } catch (error) {
       setChats(prev =>
@@ -134,8 +187,10 @@ export default function ChatPage() {
           isOpen={isOpen}
           setIsOpen={setIsOpen}
           chats={chats}
+          activeChat={activeChat}
           setActiveChat={setActiveChat}
           createChat={createChat}
+          deleteChat={deleteChat}
           setOpenProfileModal={setOpenProfileModal}
           user={user}
         />
@@ -160,13 +215,27 @@ export default function ChatPage() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
 
-          {currentChat.messages.length === 0 && (
+          {(sessionLoading || historyLoading) && (
+            <div className="flex justify-center mt-24">
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map(i => (
+                  <span key={i} className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!sessionLoading && !historyLoading && currentChat.messages.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="text-center mt-24 text-gray-400"
             >
-              เริ่มต้นพิมพ์คำถามของคุณ
+              เริ่มต้นพิมพ์คำถามของคุณ  <br />
+              ตัวอย่างการถาม:
+              "ต่อใบขับขี่ต้องใช้เอกสารอะไร?" <br />
+              "ฝ่าไฟแดงแล้วผิดไหม?" <br />
+              "ขับรถไม่มีใบขับขี่ได้ไหม?"
             </motion.div>
           )}
 

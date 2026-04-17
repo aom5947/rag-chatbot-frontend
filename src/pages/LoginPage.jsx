@@ -22,7 +22,7 @@ export default function LoginPage() {
       localStorage.setItem("refresh_token", res.data.refresh_token);
 
       // ดึง user data
-      api.get("/auth/me").then(userRes => {
+      api.get("/users/me").then(userRes => {
         login(userRes.data);
         navigate("/chat");
       }).catch(err => {

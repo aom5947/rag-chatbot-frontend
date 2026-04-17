@@ -1,14 +1,29 @@
-/**
- * API Client สำหรับเชื่อมต่อ Backend
- * 
- * Backend: http://localhost:8000
- * Endpoints:
- *   POST /chat        → รอทั้งหมด
- *   POST /chat/stream → SSE streaming
- */
+import api from "./axios"
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000"
 const API_KEY = import.meta.env.VITE_API_KEY || ""
+
+export async function fetchModels() {
+  const res = await api.get("/models")
+  return res.data.models
+}
+
+export async function fetchSessions(page = 1, limit = 20) {
+  const res = await api.get("/users/me/sessions", { params: { page, limit } })
+  return res.data
+}
+
+export async function fetchSessionHistory(sessionId) {
+  const res = await api.get(`/sessions/${sessionId}/history`)
+  return res.data
+}
+
+export async function deleteSession(sessionId) {
+  const res = await api.delete(`/sessions/${sessionId}`)
+  console.log(res.data);
+  
+  return res.data
+}
 
 /**
  * ส่งคำถาม รับคำตอบทั้งหมดพร้อม
@@ -17,13 +32,21 @@ const API_KEY = import.meta.env.VITE_API_KEY || ""
  * @param {string} model - "huggingface" หรือ "openai-compat"
  * @returns {Promise<{answer, intent, emotion, sections}>}
  */
+function authHeaders() {
+  const token = localStorage.getItem("access_token")
+  return {
+    ...(token && { "Authorization": `Bearer ${token}` }),
+    ...(API_KEY && { "X-API-Key": API_KEY }),
+  }
+}
+
 export async function sendChatMessage(message, sessionId, model = "huggingface") {
   try {
     const response = await fetch(`${API_BASE}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(API_KEY && { "X-API-Key": API_KEY }),
+        ...authHeaders(),
       },
       body: JSON.stringify({
         message,
@@ -63,7 +86,7 @@ export async function streamChatMessage(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(API_KEY && { "X-API-Key": API_KEY }),
+      ...authHeaders(),
     },
     body: JSON.stringify({
       message: String(message),

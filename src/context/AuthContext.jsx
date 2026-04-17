@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem("access_token");
 
     if (token) {
-      api.get("/auth/me").then(res => {
+      api.get("/users/me").then(res => {
         setUser(res.data);
       }).catch(() => {
         // ถ้า /auth/me fail แต่มี token ให้ decode และ set user ชั่วคราว

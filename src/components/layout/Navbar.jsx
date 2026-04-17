@@ -15,7 +15,7 @@ export const Navbar = () => {
             aria-label="main navigation"
             className="h-20 border-b border-gray-100 bg-white/80 backdrop-blur sticky top-0 z-50"
         >
-            <div className="mx-auto max-w-[1024px] w-full px-4 h-full flex justify-between items-center">
+            <div className="mx-auto max-w-5xl w-full px-4 h-full flex justify-between items-center">
                 <Link to="/" className="text-2xl font-bold tracking-tight">
                     Traffic<span className="text-blue-700">LawAI</span>
                 </Link>

@@ -1,17 +1,28 @@
 import { useState, useRef } from "react"
 import { motion } from "framer-motion"
 import { Send } from "lucide-react"
+import SelectModel from "./SelectModel"
 
 export default function ChatInput({ onSend }) {
 
   const [text, setText] = useState("")
+  const [model, setModel] = useState("")
   const textareaRef = useRef(null)
 
   const handleSubmit = (e) => {
     e?.preventDefault()
     if (!text.trim()) return
 
-    onSend(text)
+
+    if (!model) {
+      alert("กรุณาเลือกโมเดลก่อนส่งข้อความ")
+      return
+    }
+    
+    console.log(model);
+    
+
+    onSend(text, model)
     setText("")
     textareaRef.current.style.height = "auto"
   }
@@ -76,13 +87,7 @@ export default function ChatInput({ onSend }) {
           <Send size={18} />
         </motion.button>
 
-        {/* mock selector */}
-        <div>
-          <select>
-            <option value="en">English</option>
-            <option value="th">Thai</option>
-          </select>
-        </div>
+        <SelectModel value={model} onChange={setModel} />
       </div>
     </form>
   )

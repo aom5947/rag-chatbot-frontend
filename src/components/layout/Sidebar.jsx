@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Menu, X, MessageSquarePlus, Settings, User, LogOut } from "lucide-react"
+import { Menu, X, MessageSquarePlus, Settings, User, LogOut, Trash2 } from "lucide-react"
 import { useDarkMode } from "../../context/DarkModeContext"
 import { useAuth } from "../../context/AuthContext"
 
@@ -9,8 +9,10 @@ export default function Sidebar({
   isOpen,
   setIsOpen,
   chats,
+  activeChat,
   setActiveChat,
   createChat,
+  deleteChat,
   setOpenProfileModal,
   setOpenLoginModal
 }) {
@@ -128,16 +130,32 @@ export default function Sidebar({
         <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-1">
 
           {visibleChats.map(chat => (
-            <button
+            <div
               key={chat.id}
-              onClick={() => {
-                if (!user) setOpenLoginModal(true)
-                else setActiveChat(chat.id)
-              }}
-              className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-neutral-100 dark:hover:bg-gray-800 truncate"
+              className={`group flex items-center rounded-lg text-sm hover:bg-neutral-100 dark:hover:bg-gray-800 ${activeChat === chat.id ? "bg-neutral-100 dark:bg-gray-800" : ""}`}
             >
-              {isOpen ? chat.title : "💬"}
-            </button>
+              <button
+                onClick={() => {
+                  if (!user) setOpenLoginModal?.(true)
+                  else setActiveChat(chat.id)
+                }}
+                className="flex-1 text-left px-3 py-2 truncate"
+              >
+                {isOpen ? chat.title : "💬"}
+              </button>
+              {isOpen && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteChat?.(chat.id)
+                  }}
+                  className="opacity-0 group-hover:opacity-100 p-1.5 mr-1 rounded hover:bg-red-100 dark:hover:bg-red-900/40 text-neutral-400 hover:text-red-500 transition-opacity"
+                  title="ลบ session"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
           ))}
 
           <div ref={sentinelRef} />

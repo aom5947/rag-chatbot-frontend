@@ -9,7 +9,7 @@ const HomePage = () => {
     return (
         <main className="min-h-screen bg-gray-50">
             
-            <section className="mx-auto max-w-[1024px] w-full px-4 py-20 text-center">
+            <section className="mx-auto max-w-5xl w-full px-4 py-20 text-center">
                 <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4 leading-tight">
                     AI ช่วยคุณ{" "}
                     <span className="text-blue-700">
@@ -35,20 +35,20 @@ const HomePage = () => {
                 <div className="flex justify-center gap-3 flex-wrap">
                     <Link
                         to="/chat"
-                        className="px-6 py-3 bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-lg transition-colors shadow-sm"
+                        className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-lg transition-colors shadow-sm"
                     >
                         เริ่มถามเลย
                     </Link>
                     <Link
                         to="/about"
-                        className="px-6 py-3 border border-gray-300 hover:border-blue-700 hover:text-blue-700 text-gray-700 font-semibold rounded-lg transition-colors"
+                        className="px-4 py-2 border border-gray-300 hover:border-blue-700 hover:text-blue-700 text-gray-700 font-semibold rounded-lg transition-colors"
                     >
                         เรียนรู้เพิ่มเติม
                     </Link>
                 </div>
             </section>
 
-            <section className="mx-auto max-w-[1024px] w-full px-4 pb-16">
+            <section className="mx-auto max-w-5xl w-full px-4 pb-16">
                 <div className="flex flex-col sm:flex-row gap-4">
                     {features.map((feature) => (
                         <FeatureCard key={feature.title} {...feature} />
@@ -57,7 +57,7 @@ const HomePage = () => {
             </section>
 
             {/* Sample Questions */}
-            <section className="mx-auto max-w-[1024px] w-full px-4 pb-20">
+            <section className="mx-auto max-w-5xl w-full px-4 pb-20">
                 <h2 className="text-center text-sm font-semibold text-gray-400 uppercase tracking-widest mb-4">
                     ลองถามได้เลย
                 </h2>

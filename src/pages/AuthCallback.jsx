@@ -24,7 +24,7 @@ export default function AuthCallback() {
       .then(res => {
         localStorage.setItem("access_token", res.data.access_token);
         localStorage.setItem("refresh_token", res.data.refresh_token);
-        return api.get("/auth/me");
+        return api.get("/users/me");
       })
       .then(res => {
         login(res.data);

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
 });
 
 // แนบ access token ทุก request
@@ -25,7 +25,7 @@ api.interceptors.response.use(
       const refresh = localStorage.getItem("refresh_token");
 
       try {
-        const res = await axios.post("http://localhost:8000/auth/refresh", {
+        const res = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/auth/refresh`, {
           refresh_token: refresh,
         });
 
