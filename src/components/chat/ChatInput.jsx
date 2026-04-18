@@ -2,6 +2,7 @@ import { useState, useRef } from "react"
 import { motion } from "framer-motion"
 import { Send } from "lucide-react"
 import SelectModel from "./SelectModel"
+import { toast } from "sonner"
 
 export default function ChatInput({ onSend }) {
 
@@ -9,18 +10,24 @@ export default function ChatInput({ onSend }) {
   const [model, setModel] = useState("")
   const textareaRef = useRef(null)
 
+  const handleModelChange = (newModel) => {
+    if (newModel && newModel !== model) {
+      toast.success(`เลือกโมเดล ${newModel} แล้ว`)
+    }
+    setModel(newModel)
+  }
+
   const handleSubmit = (e) => {
     e?.preventDefault()
     if (!text.trim()) return
 
 
     if (!model) {
-      alert("กรุณาเลือกโมเดลก่อนส่งข้อความ")
+      toast.error("กรุณาเลือกโมเดลก่อนส่งข้อความ")
+      // alert("กรุณาเลือกโมเดลก่อนส่งข้อความ")
       return
     }
-    
-    console.log(model);
-    
+  
 
     onSend(text, model)
     setText("")
@@ -87,7 +94,7 @@ export default function ChatInput({ onSend }) {
           <Send size={18} />
         </motion.button>
 
-        <SelectModel value={model} onChange={setModel} />
+        <SelectModel value={model} onChange={handleModelChange} />
       </div>
     </form>
   )

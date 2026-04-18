@@ -110,9 +110,9 @@ export default function Message({ role, content }) {
         animate={{ opacity: 1, y: 0 }}
         className={`
         max-w-2xl px-4 py-2.5 rounded-xl text-sm shadow-sm
-        whitespace-pre-wrap break-words
+        break-words
         ${isUser
-            ? "bg-blue-500 text-white"
+            ? "bg-blue-500 text-white whitespace-pre-wrap"
             : "bg-white border border-gray-200 text-gray-800"}
       `}
       >

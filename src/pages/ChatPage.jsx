@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react"
+import { useSearchParams } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 
 import Sidebar from "../components/layout/Sidebar"
@@ -8,6 +9,7 @@ import EditProfileModal from "../components/EditProfileModal"
 
 import { useAuth } from "../context/AuthContext"
 import { streamChatMessage, fetchSessions, fetchSessionHistory, deleteSession } from "../services/api"
+import { toast } from "sonner"
 
 export default function ChatPage() {
 
@@ -20,6 +22,8 @@ export default function ChatPage() {
 
   const { user } = useAuth()
   const bottomRef = useRef(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const autoSentRef = useRef(false)
 
   // Fetch session list on mount
   useEffect(() => {
@@ -77,14 +81,28 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
   }, [chats])
 
+  // Auto-send question from ?q= param (e.g. from SampleQuestion on homepage)
+  useEffect(() => {
+    if (sessionLoading || !activeChat || autoSentRef.current) return
+    const q = searchParams.get("q")
+    if (!q) return
+    autoSentRef.current = true
+    setSearchParams({}, { replace: true })
+    handleSend(q, undefined)
+  }, [sessionLoading, activeChat])
+
   const createChat = () => {
     const newChat = { id: String(Date.now()), title: "New Chat", messages: [], loaded: true }
     setChats(prev => [newChat, ...prev])
     setActiveChat(newChat.id)
+    toast.success("สร้างแชทใหม่แล้ว!")
   }
 
   const deleteChat = async (chatId) => {
-    try { await deleteSession(chatId) } catch (e) {
+    try {
+      const data = await deleteSession(chatId);
+      toast.success("ลบแชทเรียบร้อย!");
+    } catch (e) {
       if (e?.response?.status !== 404) console.error("deleteSession failed:", e)
     }
     setChats(prev => {
@@ -112,10 +130,10 @@ export default function ChatPage() {
       prev.map(chat =>
         chat.id === activeChat
           ? {
-              ...chat,
-              title: chat.messages.length === 0 ? text.slice(0, 20) : chat.title,
-              messages: [...chat.messages, userMsg]
-            }
+            ...chat,
+            title: chat.messages.length === 0 ? text.slice(0, 20) : chat.title,
+            messages: [...chat.messages, userMsg]
+          }
           : chat
       )
     )
@@ -139,18 +157,18 @@ export default function ChatPage() {
             prev.map(chat =>
               chat.id === activeChat
                 ? {
-                    ...chat,
-                    messages: chat.messages.map((msg, i) =>
-                      i === chat.messages.length - 1
-                        ? { ...msg, content: msg.content + token }
-                        : msg
-                    )
-                  }
+                  ...chat,
+                  messages: chat.messages.map((msg, i) =>
+                    i === chat.messages.length - 1
+                      ? { ...msg, content: msg.content + token }
+                      : msg
+                  )
+                }
                 : chat
             )
           )
         },
-        () => {},
+        () => { },
         model
       )
     } catch (error) {
@@ -158,13 +176,13 @@ export default function ChatPage() {
         prev.map(chat =>
           chat.id === activeChat
             ? {
-                ...chat,
-                messages: chat.messages.map((msg, i) =>
-                  i === chat.messages.length - 1
-                    ? { ...msg, content: `❌ ${error.message}` }
-                    : msg
-                )
-              }
+              ...chat,
+              messages: chat.messages.map((msg, i) =>
+                i === chat.messages.length - 1
+                  ? { ...msg, content: `❌ ${error.message}` }
+                  : msg
+              )
+            }
             : chat
         )
       )
@@ -250,21 +268,19 @@ export default function ChatPage() {
                 className="flex flex-col"
               >
                 <div
-                  className={`text-xs mb-1 ${
-                    msg.role === "user"
+                  className={`text-xs mb-1 ${msg.role === "user"
                       ? "text-right"
                       : "text-left text-gray-400"
-                  }`}
+                    }`}
                 >
                   {msg.role === "user" ? "You" : "AI"}
                 </div>
 
                 <div
-                  className={`max-w-xl px-4 py-3 rounded-2xl shadow-sm ${
-                    msg.role === "user"
+                  className={`max-w-xl px-4 py-3 rounded-2xl shadow-sm ${msg.role === "user"
                       ? "bg-blue-500 text-white ml-auto"
                       : "bg-white"
-                  }`}
+                    }`}
                 >
                   <Message role={msg.role} content={msg.content} />
                 </div>

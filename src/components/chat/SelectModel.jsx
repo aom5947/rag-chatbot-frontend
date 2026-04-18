@@ -32,7 +32,6 @@ export default function SelectModel({ value, onChange }) {
     fetchModels()
       .then((list) => {
         setModels(list)
-        if (!value && list.length > 0) onChange?.(list[0])
       })
       .catch(() => setModels([]))
   }, [])

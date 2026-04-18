@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/axios";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
@@ -12,15 +13,22 @@ export default function RegisterPage() {
     e.preventDefault();
 
     try {
-      await api.post("/auth/register", {
+      const data = await api.post("/auth/register", {
         email,
         username: email,
         password,
       });
 
-      navigate("/login");
+      if (data) {
+        toast.success("สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ");
+        setInterval(() => {
+          navigate("/login");
+        }, 3000);
+      }
     } catch (err) {
-      alert(err.response?.data?.detail || "Register failed");
+      console.log(err.response?.data);
+      
+      toast.error( "เกิดข้อผิดพลาดในการสมัครสมาชิก" || err.response?.data?.detail );
     }
   };
 
