@@ -91,11 +91,11 @@ export default function Sidebar({
     >
 
       {/* Header */}
-      <div className="flex items-center justify-between h-14 px-4 bg-neutral-50 dark:bg-gray-800 border-b border-neutral-200 dark:border-gray-700">
+      <div className="flex items-center justify-between h-20 px-4 bg-white dark:bg-gray-800 border-b border-neutral-200 dark:border-gray-700">
         {isOpen && (
           <Link to="/">
             <h2 className="font-semibold text-neutral-700 dark:text-gray-300">
-              Legal AI
+              AI Traffic Assistant
             </h2>
           </Link>
         )}
@@ -117,8 +117,8 @@ export default function Sidebar({
           }}
           className="flex items-center gap-2 w-full border border-neutral-300 dark:border-gray-600 p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-gray-800"
         >
-          <MessageSquarePlus size={18} />
-          {isOpen && "New Chat"}
+          <MessageSquarePlus size={18} className="text-blue-700" />
+          {isOpen && "สร้างแชทใหม่"}
         </button>
       </div>
 
@@ -126,7 +126,7 @@ export default function Sidebar({
       <div className="flex-1 flex flex-col min-h-0 px-3">
         {isOpen && (
           <p className="text-xs uppercase text-neutral-400 dark:text-gray-500 mb-2">
-            History
+            ประวัติการสนทนา
           </p>
         )}
 
@@ -237,7 +237,7 @@ export default function Sidebar({
             if (!user) setOpenLoginModal(true)
             else setOpenProfile(!openProfile)
           }}
-          className="flex items-center gap-3 cursor-pointer hover:bg-neutral-100 dark:hover:bg-gray-800 p-2 rounded"
+          className="flex items-center gap-3 cursor-pointer hover:bg-neutral-100 dark:hover:bg-gray-800 p-[8px] rounded"
         >
 
           <div className="w-8 h-8 rounded-full overflow-hidden">

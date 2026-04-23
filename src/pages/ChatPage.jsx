@@ -10,6 +10,7 @@ import EditProfileModal from "../components/EditProfileModal"
 import { useAuth } from "../context/AuthContext"
 import { streamChatMessage, fetchSessions, fetchSessionHistory, deleteSession } from "../services/api"
 import { toast } from "sonner"
+import { Search } from "lucide-react"
 
 export default function ChatPage() {
 
@@ -220,12 +221,15 @@ export default function ChatPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="h-14 flex items-center justify-between px-4 border-b border-gray-200 backdrop-blur bg-white/70"
+          className="h-20 flex items-center justify-between px-4 border-b border-gray-200 backdrop-blur bg-white"
         >
-          <div className="font-medium">Legal Assistant</div>
+          <div className="font-medium text-black">
+            เอไอด้าน
+            <span className="text-blue-700">กฏหมายจราจร</span>
+          </div>
           {user && (
             <div className="text-sm text-gray-500">
-              {user?.name}
+              สวัสดีคุณ {user?.username}
             </div>
           )}
         </motion.div>
@@ -269,18 +273,18 @@ export default function ChatPage() {
               >
                 <div
                   className={`text-xs mb-1 ${msg.role === "user"
-                      ? "text-right"
-                      : "text-left text-gray-400"
+                    ? "text-right"
+                    : "text-left text-gray-400"
                     }`}
                 >
                   {msg.role === "user" ? "You" : "AI"}
                 </div>
 
                 <div
-                  className={`max-w-xl px-4 py-3 rounded-2xl shadow-sm ${msg.role === "user"
-                      ? "bg-blue-500 text-white ml-auto"
-                      : "bg-white"
-                    }`}
+                // className={`max-w-xl px-4 py-3 rounded-2xl shadow-sm ${msg.role === "user"
+                //     ? "bg-blue-500 text-white ml-auto"
+                //     : "bg-white"
+                //   }`}
                 >
                   <Message role={msg.role} content={msg.content} />
                 </div>
@@ -292,7 +296,7 @@ export default function ChatPage() {
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-gray-200 bg-white/70 backdrop-blur">
+        <div className="">
           <ChatInput onSend={handleSend} />
         </div>
 

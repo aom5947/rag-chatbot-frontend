@@ -50,7 +50,7 @@ export default function ChatInput({ onSend }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t bg-white/70 backdrop-blur p-4"
+      className="border-t bg-white/70 backdrop-blur p-3"
     >
       <div className="flex items-center gap-3 max-w-4xl mx-auto">
 

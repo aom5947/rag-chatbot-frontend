@@ -14,4 +14,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    allowedHosts: ["wormless-nomographical-carl.ngrok-free.dev", "frontend412.germanyitalyjapan.online"],
+  },
 });

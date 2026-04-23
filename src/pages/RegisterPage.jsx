@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/axios";
 import { toast } from "sonner";
 
@@ -65,7 +65,7 @@ export default function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-
+          <Link to="/login" className="text-sm text-gray-400 hover:underline mb-4 block">มีบัญชีแล้ว? เข้าสู่ระบบ</Link>
           <button
             type="submit"
             className="w-full bg-black text-white py-2.5 rounded-lg hover:opacity-90 transition"
