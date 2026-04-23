@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Menu, X, MessageSquarePlus, Settings, User, LogOut } from "lucide-react"
+import { Menu, X, MessageSquarePlus, Settings, User, LogOut, Trash2 } from "lucide-react"
 import { useDarkMode } from "../../context/DarkModeContext"
 import { useAuth } from "../../context/AuthContext"
+import { Link } from "react-router-dom"
 
 const BATCH_SIZE = 10
 
@@ -9,8 +10,10 @@ export default function Sidebar({
   isOpen,
   setIsOpen,
   chats,
+  activeChat,
   setActiveChat,
   createChat,
+  deleteChat,
   setOpenProfileModal,
   setOpenLoginModal
 }) {
@@ -88,18 +91,20 @@ export default function Sidebar({
     >
 
       {/* Header */}
-      <div className="flex items-center justify-between h-14 px-4 bg-neutral-50 dark:bg-gray-800 border-b border-neutral-200 dark:border-gray-700">
+      <div className="flex items-center justify-between h-20 px-4 bg-white dark:bg-gray-800 border-b border-neutral-200 dark:border-gray-700">
         {isOpen && (
-          <h2 className="font-semibold text-neutral-700 dark:text-gray-300">
-            Legal AI
-          </h2>
+          <Link to="/">
+            <h2 className="font-semibold text-neutral-700 dark:text-gray-300">
+              AI Traffic Assistant
+            </h2>
+          </Link>
         )}
 
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-gray-700"
         >
-          {isOpen ? <X size={18}/> : <Menu size={18}/>}
+          {isOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
       </div>
 
@@ -112,8 +117,8 @@ export default function Sidebar({
           }}
           className="flex items-center gap-2 w-full border border-neutral-300 dark:border-gray-600 p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-gray-800"
         >
-          <MessageSquarePlus size={18}/>
-          {isOpen && "New Chat"}
+          <MessageSquarePlus size={18} className="text-blue-700" />
+          {isOpen && "สร้างแชทใหม่"}
         </button>
       </div>
 
@@ -121,23 +126,39 @@ export default function Sidebar({
       <div className="flex-1 flex flex-col min-h-0 px-3">
         {isOpen && (
           <p className="text-xs uppercase text-neutral-400 dark:text-gray-500 mb-2">
-            History
+            ประวัติการสนทนา
           </p>
         )}
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-1">
 
           {visibleChats.map(chat => (
-            <button
+            <div
               key={chat.id}
-              onClick={() => {
-                if (!user) setOpenLoginModal(true)
-                else setActiveChat(chat.id)
-              }}
-              className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-neutral-100 dark:hover:bg-gray-800 truncate"
+              className={`group flex items-center rounded-lg text-sm hover:bg-neutral-100 dark:hover:bg-gray-800 ${activeChat === chat.id ? "bg-neutral-100 dark:bg-gray-800" : ""}`}
             >
-              {isOpen ? chat.title : "💬"}
-            </button>
+              <button
+                onClick={() => {
+                  if (!user) setOpenLoginModal?.(true)
+                  else setActiveChat(chat.id)
+                }}
+                className="flex-1 text-left px-3 py-2 truncate"
+              >
+                {isOpen ? chat.title : "💬"}
+              </button>
+              {isOpen && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteChat?.(chat.id)
+                  }}
+                  className="opacity-0 group-hover:opacity-100 p-1.5 mr-1 rounded hover:bg-red-100 dark:hover:bg-red-900/40 text-neutral-400 hover:text-red-500 transition-opacity"
+                  title="ลบ session"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
           ))}
 
           <div ref={sentinelRef} />
@@ -145,11 +166,11 @@ export default function Sidebar({
           {loading && (
             <div className="flex justify-center py-3">
               <div className="flex gap-1">
-                {[0,1,2].map(i => (
+                {[0, 1, 2].map(i => (
                   <span
                     key={i}
                     className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce"
-                    style={{animationDelay:`${i*0.15}s`}}
+                    style={{ animationDelay: `${i * 0.15}s` }}
                   />
                 ))}
               </div>
@@ -173,7 +194,7 @@ export default function Sidebar({
               }}
               className="flex items-center gap-2 w-full p-3 text-sm hover:bg-neutral-100 dark:hover:bg-gray-700"
             >
-              <User size={16}/>
+              <User size={16} />
               แก้ไขโปรไฟล์
             </button>
 
@@ -181,7 +202,7 @@ export default function Sidebar({
               onClick={() => setOpenSettings(!openSettings)}
               className="flex items-center gap-2 w-full p-3 text-sm hover:bg-neutral-100 dark:hover:bg-gray-700"
             >
-              <Settings size={16}/>
+              <Settings size={16} />
               ตั้งค่า
             </button>
 
@@ -203,7 +224,7 @@ export default function Sidebar({
               onClick={logout}
               className="flex items-center gap-2 w-full p-3 text-sm hover:bg-neutral-100 dark:hover:bg-gray-700"
             >
-              <LogOut size={16}/>
+              <LogOut size={16} />
               ออกจากระบบ
             </button>
 
@@ -216,7 +237,7 @@ export default function Sidebar({
             if (!user) setOpenLoginModal(true)
             else setOpenProfile(!openProfile)
           }}
-          className="flex items-center gap-3 cursor-pointer hover:bg-neutral-100 dark:hover:bg-gray-800 p-2 rounded"
+          className="flex items-center gap-3 cursor-pointer hover:bg-neutral-100 dark:hover:bg-gray-800 p-[8px] rounded"
         >
 
           <div className="w-8 h-8 rounded-full overflow-hidden">

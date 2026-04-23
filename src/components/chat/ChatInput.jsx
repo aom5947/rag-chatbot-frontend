@@ -1,17 +1,35 @@
 import { useState, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { Send } from "lucide-react"
+import SelectModel from "./SelectModel"
+import { toast } from "sonner"
 
 export default function ChatInput({ onSend }) {
 
   const [text, setText] = useState("")
+  const [model, setModel] = useState("")
   const textareaRef = useRef(null)
 
+  const handleModelChange = (newModel) => {
+    if (newModel && newModel !== model) {
+      toast.success(`เลือกโมเดล ${newModel} แล้ว`)
+    }
+    setModel(newModel)
+  }
+
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e?.preventDefault()
     if (!text.trim()) return
 
-    onSend(text)
+
+    if (!model) {
+      toast.error("กรุณาเลือกโมเดลก่อนส่งข้อความ")
+      // alert("กรุณาเลือกโมเดลก่อนส่งข้อความ")
+      return
+    }
+  
+
+    onSend(text, model)
     setText("")
     textareaRef.current.style.height = "auto"
   }
@@ -22,12 +40,19 @@ export default function ChatInput({ onSend }) {
     textareaRef.current.style.height = textareaRef.current.scrollHeight + "px"
   }
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSubmit()
+    }
+  }
+
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t bg-white/70 backdrop-blur p-4"
+      className="border-t bg-white/70 backdrop-blur p-3"
     >
-      <div className="flex items-end gap-3 max-w-4xl mx-auto">
+      <div className="flex items-center gap-3 max-w-4xl mx-auto">
 
         {/* textarea */}
         <textarea
@@ -35,13 +60,14 @@ export default function ChatInput({ onSend }) {
           rows={1}
           value={text}
           onChange={handleInput}
+          onKeyDown={handleKeyDown}
           placeholder="พิมพ์ข้อความ..."
           className="
             flex-1
             resize-none
             bg-gray-100
             border border-gray-200
-            rounded-2xl
+            rounded-md
             px-4 py-3
             outline-none
             focus:ring-2 focus:ring-blue-500
@@ -68,6 +94,7 @@ export default function ChatInput({ onSend }) {
           <Send size={18} />
         </motion.button>
 
+        <SelectModel value={model} onChange={handleModelChange} />
       </div>
     </form>
   )

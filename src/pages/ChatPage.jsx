@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react"
+import { useSearchParams } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 
 import Sidebar from "../components/layout/Sidebar"
@@ -7,51 +8,121 @@ import Message from "../components/chat/Message"
 import EditProfileModal from "../components/EditProfileModal"
 
 import { useAuth } from "../context/AuthContext"
-import { streamChatMessage } from "../services/api"
+import { streamChatMessage, fetchSessions, fetchSessionHistory, deleteSession } from "../services/api"
+import { toast } from "sonner"
+import { Search } from "lucide-react"
 
 export default function ChatPage() {
 
   const [isOpen, setIsOpen] = useState(true)
   const [chats, setChats] = useState([])
   const [activeChat, setActiveChat] = useState(null)
+  const [sessionLoading, setSessionLoading] = useState(true)
+  const [historyLoading, setHistoryLoading] = useState(false)
   const [openProfileModal, setOpenProfileModal] = useState(false)
 
   const { user } = useAuth()
-
   const bottomRef = useRef(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const autoSentRef = useRef(false)
 
-  // โหลด chat
+  // Fetch session list on mount
   useEffect(() => {
-    const saved = localStorage.getItem("chats")
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      setChats(parsed)
-      setActiveChat(parsed[0]?.id)
-    } else {
-      const firstChat = { id: Date.now(), title: "New Chat", messages: [] }
-      setChats([firstChat])
-      setActiveChat(firstChat.id)
-    }
+    fetchSessions()
+      .then(({ items }) => {
+        if (items.length === 0) {
+          const newChat = { id: String(Date.now()), title: "New Chat", messages: [], loaded: true }
+          setChats([newChat])
+          setActiveChat(newChat.id)
+        } else {
+          const list = items.map(s => ({
+            id: s.id,
+            title: new Date(s.last_active).toLocaleDateString("th-TH", { dateStyle: "medium" }),
+            messages: [],
+            loaded: false,
+          }))
+          setChats(list)
+          setActiveChat(list[0].id)
+        }
+      })
+      .catch(() => {
+        const newChat = { id: String(Date.now()), title: "New Chat", messages: [], loaded: true }
+        setChats([newChat])
+        setActiveChat(newChat.id)
+      })
+      .finally(() => setSessionLoading(false))
   }, [])
 
+  // Lazy-load history when switching to an unloaded session
   useEffect(() => {
-    localStorage.setItem("chats", JSON.stringify(chats))
-  }, [chats])
+    if (!activeChat) return
+    const chat = chats.find(c => c.id === activeChat)
+    if (!chat || chat.loaded) return
+
+    setHistoryLoading(true)
+    fetchSessionHistory(activeChat)
+      .then(history => {
+        const messages = history.map(m => ({ role: m.role, content: m.content }))
+        const firstUserMsg = history.find(m => m.role === "user")?.content
+        setChats(prev => prev.map(c =>
+          c.id === activeChat
+            ? { ...c, messages, title: firstUserMsg?.slice(0, 30) || c.title, loaded: true }
+            : c
+        ))
+      })
+      .catch(() => {
+        setChats(prev => prev.map(c =>
+          c.id === activeChat ? { ...c, loaded: true } : c
+        ))
+      })
+      .finally(() => setHistoryLoading(false))
+  }, [activeChat])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end"
-    })
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
   }, [chats])
+
+  // Auto-send question from ?q= param (e.g. from SampleQuestion on homepage)
+  useEffect(() => {
+    if (sessionLoading || !activeChat || autoSentRef.current) return
+    const q = searchParams.get("q")
+    if (!q) return
+    autoSentRef.current = true
+    setSearchParams({}, { replace: true })
+    handleSend(q, undefined)
+  }, [sessionLoading, activeChat])
 
   const createChat = () => {
-    const newChat = { id: Date.now(), title: "New Chat", messages: [] }
+    const newChat = { id: String(Date.now()), title: "New Chat", messages: [], loaded: true }
     setChats(prev => [newChat, ...prev])
     setActiveChat(newChat.id)
+    toast.success("สร้างแชทใหม่แล้ว!")
   }
 
-  const handleSend = async (text) => {
+  const deleteChat = async (chatId) => {
+    try {
+      const data = await deleteSession(chatId);
+      toast.success("ลบแชทเรียบร้อย!");
+    } catch (e) {
+      if (e?.response?.status !== 404) console.error("deleteSession failed:", e)
+    }
+    setChats(prev => {
+      const next = prev.filter(c => c.id !== chatId)
+      if (activeChat === chatId) {
+        if (next.length > 0) {
+          setActiveChat(next[0].id)
+        } else {
+          const newChat = { id: String(Date.now()), title: "New Chat", messages: [], loaded: true }
+          setChats([newChat])
+          setActiveChat(newChat.id)
+          return [newChat]
+        }
+      }
+      return next
+    })
+  }
+
+  const handleSend = async (text, model) => {
     if (!activeChat) return
 
     const userMsg = { role: "user", content: text }
@@ -60,10 +131,10 @@ export default function ChatPage() {
       prev.map(chat =>
         chat.id === activeChat
           ? {
-              ...chat,
-              title: chat.messages.length === 0 ? text.slice(0, 20) : chat.title,
-              messages: [...chat.messages, userMsg]
-            }
+            ...chat,
+            title: chat.messages.length === 0 ? text.slice(0, 20) : chat.title,
+            messages: [...chat.messages, userMsg]
+          }
           : chat
       )
     )
@@ -87,31 +158,32 @@ export default function ChatPage() {
             prev.map(chat =>
               chat.id === activeChat
                 ? {
-                    ...chat,
-                    messages: chat.messages.map((msg, i) =>
-                      i === chat.messages.length - 1
-                        ? { ...msg, content: msg.content + token }
-                        : msg
-                    )
-                  }
+                  ...chat,
+                  messages: chat.messages.map((msg, i) =>
+                    i === chat.messages.length - 1
+                      ? { ...msg, content: msg.content + token }
+                      : msg
+                  )
+                }
                 : chat
             )
           )
         },
-        () => {}
+        () => { },
+        model
       )
     } catch (error) {
       setChats(prev =>
         prev.map(chat =>
           chat.id === activeChat
             ? {
-                ...chat,
-                messages: chat.messages.map((msg, i) =>
-                  i === chat.messages.length - 1
-                    ? { ...msg, content: `❌ ${error.message}` }
-                    : msg
-                )
-              }
+              ...chat,
+              messages: chat.messages.map((msg, i) =>
+                i === chat.messages.length - 1
+                  ? { ...msg, content: `❌ ${error.message}` }
+                  : msg
+              )
+            }
             : chat
         )
       )
@@ -134,8 +206,10 @@ export default function ChatPage() {
           isOpen={isOpen}
           setIsOpen={setIsOpen}
           chats={chats}
+          activeChat={activeChat}
           setActiveChat={setActiveChat}
           createChat={createChat}
+          deleteChat={deleteChat}
           setOpenProfileModal={setOpenProfileModal}
           user={user}
         />
@@ -147,12 +221,15 @@ export default function ChatPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="h-14 flex items-center justify-between px-4 border-b border-gray-200 backdrop-blur bg-white/70"
+          className="h-20 flex items-center justify-between px-4 border-b border-gray-200 backdrop-blur bg-white"
         >
-          <div className="font-medium">Legal Assistant</div>
+          <div className="font-medium text-black">
+            เอไอด้าน
+            <span className="text-blue-700">กฏหมายจราจร</span>
+          </div>
           {user && (
             <div className="text-sm text-gray-500">
-              {user?.name}
+              สวัสดีคุณ {user?.username}
             </div>
           )}
         </motion.div>
@@ -160,13 +237,27 @@ export default function ChatPage() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
 
-          {currentChat.messages.length === 0 && (
+          {(sessionLoading || historyLoading) && (
+            <div className="flex justify-center mt-24">
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map(i => (
+                  <span key={i} className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!sessionLoading && !historyLoading && currentChat.messages.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="text-center mt-24 text-gray-400"
             >
-              เริ่มต้นพิมพ์คำถามของคุณ
+              เริ่มต้นพิมพ์คำถามของคุณ  <br />
+              ตัวอย่างการถาม:
+              "ต่อใบขับขี่ต้องใช้เอกสารอะไร?" <br />
+              "ฝ่าไฟแดงแล้วผิดไหม?" <br />
+              "ขับรถไม่มีใบขับขี่ได้ไหม?"
             </motion.div>
           )}
 
@@ -181,21 +272,19 @@ export default function ChatPage() {
                 className="flex flex-col"
               >
                 <div
-                  className={`text-xs mb-1 ${
-                    msg.role === "user"
-                      ? "text-right"
-                      : "text-left text-gray-400"
-                  }`}
+                  className={`text-xs mb-1 ${msg.role === "user"
+                    ? "text-right"
+                    : "text-left text-gray-400"
+                    }`}
                 >
                   {msg.role === "user" ? "You" : "AI"}
                 </div>
 
                 <div
-                  className={`max-w-xl px-4 py-3 rounded-2xl shadow-sm ${
-                    msg.role === "user"
-                      ? "bg-blue-500 text-white ml-auto"
-                      : "bg-white"
-                  }`}
+                // className={`max-w-xl px-4 py-3 rounded-2xl shadow-sm ${msg.role === "user"
+                //     ? "bg-blue-500 text-white ml-auto"
+                //     : "bg-white"
+                //   }`}
                 >
                   <Message role={msg.role} content={msg.content} />
                 </div>
@@ -207,7 +296,7 @@ export default function ChatPage() {
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-gray-200 bg-white/70 backdrop-blur">
+        <div className="">
           <ChatInput onSend={handleSend} />
         </div>
 

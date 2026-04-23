@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import api from "../services/axios";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -22,15 +23,20 @@ export default function LoginPage() {
       localStorage.setItem("refresh_token", res.data.refresh_token);
 
       // ดึง user data
-      api.get("/auth/me").then(userRes => {
+      api.get("/users/me").then(userRes => {
         login(userRes.data);
-        navigate("/chat");
+
+        toast.success("เข้าสู่ระบบสำเร็จ!");
+
+        setInterval(() => {
+          navigate("/chat");
+        }, 3000);
       }).catch(err => {
-        alert("Failed to get user data");
+        toast.error("เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้");
         navigate("/login");
       });
     } catch (err) {
-      alert(err.response?.data?.detail || "Login failed");
+      toast.error(err.response?.data?.detail || "Login failed");
     }
   };
 

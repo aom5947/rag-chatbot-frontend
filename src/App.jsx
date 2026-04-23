@@ -8,30 +8,36 @@ import ProtectedRoute from "./components/auth/ProtectedRoute"
 import RegisterPage from "./pages/RegisterPage"
 import EditProfileModal from "./components/EditProfileModal"
 import AuthCallback from "./pages/AuthCallback"
+import HomePage from "./pages/HomePage"
+import AboutPage from "./pages/AboutPage"
+import HomepageLayout from "./components/layout/HomepageLayout"
+import { Toaster } from "sonner"
 
 function App() {
-
   const [openProfileModal, setOpenProfileModal] = useState(false)
 
   return (
     <DarkModeProvider>
       <AuthProvider>
         <BrowserRouter>
-
+          <Toaster position="top-right" richColors />
           <Routes>
-
             {/* ✅ Google callback (สำคัญมาก) */}
             <Route path="/auth/callback" element={<AuthCallback />} />
 
             {/* ✅ หน้าแรกต้องกันไว้ */}
-            <Route
+            {/* <Route
               path="/"
               element={
                 <ProtectedRoute>
                   <ChatPage setOpenProfileModal={setOpenProfileModal} />
                 </ProtectedRoute>
               }
-            />
+            /> */}
+            <Route element={<HomepageLayout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/about" element={<AboutPage />} />
+            </Route>
 
             {/* ✅ login */}
             <Route path="/login" element={<LoginPage />} />
@@ -60,7 +66,6 @@ function App() {
             />
 
           </Routes>
-
           {/* modal */}
           <EditProfileModal
             open={openProfileModal}
