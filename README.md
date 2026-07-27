@@ -1,16 +1,28 @@
-# React + Vite
+# 🚦 Traffic Law AI Chatbot
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AI Chatbot สำหรับตอบคำถามเกี่ยวกับกฎหมายจราจรไทย โดยใช้เทคนิค **Retrieval-Augmented Generation (RAG)** เพื่อค้นหาข้อมูลจากเอกสารกฎหมายและสร้างคำตอบที่ถูกต้องด้วย AI
 
-Currently, two official plugins are available:
+โปรเจกต์นี้ถูกพัฒนาขึ้นเพื่อช่วยให้ผู้ใช้งานสามารถค้นหาข้อมูลกฎหมายจราจรได้ง่ายขึ้น เช่น ค่าปรับ ข้อกำหนดการขับขี่ และบทลงโทษตามกฎหมาย
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 📌 Project Overview
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+การค้นหาข้อมูลกฎหมายจราจรจากเอกสารจำนวนมากอาจใช้เวลานาน และคำตอบจาก AI ทั่วไปอาจไม่มีข้อมูลอ้างอิงที่ถูกต้อง
 
-## Expanding the ESLint configuration
+ระบบนี้จึงนำเทคโนโลยี **RAG (Retrieval-Augmented Generation)** มาใช้ โดยให้ AI ค้นหาข้อมูลจากฐานความรู้ก่อนตอบคำถาม เพื่อเพิ่มความแม่นยำและลดการสร้างข้อมูลที่ไม่ตรงกับกฎหมาย
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## ✨ Features
+
+- 💬 สนทนากับ AI ผ่าน Chat Interface
+- 📚 ค้นหาข้อมูลจากฐานความรู้กฎหมายจราจร
+- 🔎 ใช้ RAG สำหรับ Retrieval ข้อมูลที่เกี่ยวข้อง
+- 🤖 AI ช่วยสรุปและอธิบายข้อกฎหมายให้เข้าใจง่าย
+- ⚡ Backend API สำหรับจัดการคำถามและประมวลผล
+- 🗂️ รองรับการเพิ่มเอกสารกฎหมายเข้าสู่ Knowledge Base
+
+---
+
+## 🏗️ System Architecture
